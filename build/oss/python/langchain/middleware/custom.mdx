@@ -186,10 +186,10 @@ Quick and simple for single-hook middleware. Use decorators to wrap individual f
 **Available decorators:**
 
 **Node-style:**
-- @[`@before_agent`] - Runs before agent starts (once per invocation)
+- [`@before_agent`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.before_agent) - Runs before agent starts (once per invocation)
 - [`@before_model`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.before_model) - Runs before each model call
 - [`@after_model`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.after_model) - Runs after each model response
-- @[`@after_agent`] - Runs after agent completes (once per invocation)
+- [`@after_agent`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.after_agent) - Runs after agent completes (once per invocation)
 
 **Wrap-style:**
 - [`@wrap_model_call`](https://reference.langchain.com/python/langchain/middleware/#langchain.agents.middleware.wrap_model_call) - Wraps each model call with custom logic
@@ -240,7 +240,7 @@ agent = create_agent(
 
 ### Class-based middleware
 
-More powerful for complex middleware with multiple hooks or configuration.
+More powerful for complex middleware with multiple hooks or configuration. Use classes when you need to define both sync and async implementations for the same hook, or when you want to combine multiple hooks in a single middleware.
 
 **Example:**
 
@@ -266,8 +266,9 @@ agent = create_agent(
 ```
 
 **When to use classes:**
-- Multiple hooks needed
-- Complex configuration required
+- Defining both sync and async implementations for the same hook
+- Multiple hooks needed in a single middleware
+- Complex configuration required (e.g., configurable thresholds, custom models)
 - Reuse across projects with init-time configuration
 
 
