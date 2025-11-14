@@ -386,6 +386,7 @@ LINK_MAPS: list[LinkMap] = [
             "ClearToolUsesEdit": "classes/langchain.index.ClearToolUsesEdit.html",
             "ContextEdit": "interfaces/langchain.index.ContextEdit.html",
             "toolRetryMiddleware": "functions/langchain.index.toolRetryMiddleware.html",
+            "openAIModerationMiddleware": "functions/langchain.index.openAIModerationMiddleware.html",
         },
     },
 ]
