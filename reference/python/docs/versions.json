@@ -1,0 +1,13 @@
+[
+  {
+    "version": "latest",
+    "title": "latest",
+    "aliases": ["v1.0"]
+  },
+  {
+    "version": "v0.3",
+    "title": "v0.3",
+    "aliases": [],
+    "url": "https://reference.langchain.com/v0.3/python/"
+  }
+]

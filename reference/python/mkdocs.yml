@@ -199,6 +199,13 @@ plugins:
   # This might be the same as https://mrkeo.github.io/reference/code-blocks/#snippets below in markdown_extensions?
   # - include-markdown
 
+  # https://github.com/jimporter/mike
+  # Versioning support for MkDocs documentation
+  - mike:
+      version_selector: true
+      css_dir: css
+      javascript_dir: js
+
   # https://mkdocstrings.github.io/
   # Generates API documentation from Python docstrings
   - mkdocstrings:
@@ -665,6 +672,9 @@ extra_javascript:
 
 # https://www.mkdocs.org/user-guide/configuration/#extra
 extra:
+  # https://squidfunk.github.io/mkdocs-material/setup/setting-up-versioning/#versioning
+  version:
+    provider: mike
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/langchain-ai/langchain
