@@ -183,7 +183,7 @@ Use the returned `id` to reference this export in subsequent bulk export operati
 #### Limiting exported fields
 
 <Note>
-Requires LangSmith Helm version >= `0.12.11` (application version >= `0.12.42`). This feature **is supported** in scheduled bulk exports and standard bulk exports.
+Requires LangSmith Helm version >= `0.12.11` (application version >= `0.12.42`). This feature **is supported** in [scheduled bulk exports](#scheduled-exports) and [standard bulk exports](#create-an-export-job).
 </Note>
 
 You can improve bulk export speed and reduce row size by limiting which fields are included in the exported Parquet files using the `export_fields` parameter. When `export_fields` is provided, only the specified fields are exported as columns in the Parquet files. When `export_fields` is not provided, all exportable fields are included.
@@ -212,9 +212,9 @@ The `export_fields` parameter accepts an array of field names. Available fields 
 - `tenant_id`
 - `is_root`
 
-<Note>
+<Tip>
 **Performance tip**: Excluding `inputs` and `outputs` from your export can significantly improve export performance and reduce file sizes, especially for large runs. Only include these fields if you need them for your analysis.
-</Note>
+</Tip>
 
 ### Scheduled exports
 
