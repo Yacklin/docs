@@ -941,15 +941,8 @@ def add_context(
     request: ModelRequest,
     handler: Callable[[ModelRequest], ModelResponse],
 ) -> ModelResponse:
-    # When content is a simple string
-    if isinstance(request.system_message.content, str):
-        new_system_message = SystemMessage(
-            content=f"{request.system_message.content}\n\nAdditional context."
-        )
-        return handler(request.override(system_message=new_system_message))
-
-    # When content is a list of blocks, append a new text block
-    new_content = list(request.system_message.content) + [
+    # Always work with content blocks
+    new_content = list(request.system_message.content_blocks) + [
         {"type": "text", "text": "Additional context."}
     ]
     new_system_message = SystemMessage(content=new_content)
@@ -972,15 +965,8 @@ class ContextMiddleware(AgentMiddleware):
         request: ModelRequest,
         handler: Callable[[ModelRequest], ModelResponse],
     ) -> ModelResponse:
-        # When content is a simple string
-        if isinstance(request.system_message.content, str):
-            new_system_message = SystemMessage(
-                content=f"{request.system_message.content}\n\nAdditional context."
-            )
-            return handler(request.override(system_message=new_system_message))
-
-        # When content is a list of blocks, append a new text block
-        new_content = list(request.system_message.content) + [
+        # Always work with content blocks
+        new_content = list(request.system_message.content_blocks) + [
             {"type": "text", "text": "Additional context."}
         ]
         new_system_message = SystemMessage(content=new_content)
@@ -1008,15 +994,8 @@ def add_cached_context(
     request: ModelRequest,
     handler: Callable[[ModelRequest], ModelResponse],
 ) -> ModelResponse:
-    # Build new content with cache control
-    # When content is a string, convert to list of blocks first
-    if isinstance(request.system_message.content, str):
-        base_content = [{"type": "text", "text": request.system_message.content}]
-    else:
-        base_content = list(request.system_message.content)
-
-    # Add new content block with cache control
-    new_content = base_content + [
+    # Always work with content blocks
+    new_content = list(request.system_message.content_blocks) + [
         {
             "type": "text",
             "text": "Here is a large document to analyze:\n\n<document>...</document>",
@@ -1045,15 +1024,8 @@ class CachedContextMiddleware(AgentMiddleware):
         request: ModelRequest,
         handler: Callable[[ModelRequest], ModelResponse],
     ) -> ModelResponse:
-        # Build new content with cache control
-        # When content is a string, convert to list of blocks first
-        if isinstance(request.system_message.content, str):
-            base_content = [{"type": "text", "text": request.system_message.content}]
-        else:
-            base_content = list(request.system_message.content)
-
-        # Add new content block with cache control
-        new_content = base_content + [
+        # Always work with content blocks
+        new_content = list(request.system_message.content_blocks) + [
             {
                 "type": "text",
                 "text": "Here is a large document to analyze:\n\n<document>...</document>",
@@ -1070,8 +1042,8 @@ class CachedContextMiddleware(AgentMiddleware):
 
 **Notes:**
 - `ModelRequest.system_message` is always a @[`SystemMessage`] object, even if the agent was created with `system_prompt="string"`
-- `SystemMessage.content` can be either a `str` or a list of content blocks (e.g., `[{"type": "text", "text": "...", "cache_control": {...}}]`)
-- When modifying system messages with structured content blocks, convert to a list first and append new blocks to preserve existing structure
+- Use `SystemMessage.content_blocks` to access content as a list of blocks, regardless of whether the original content was a string or list
+- When modifying system messages, use `content_blocks` and append new blocks to preserve existing structure
 - You can pass @[`SystemMessage`] objects directly to `create_agent`'s `system_prompt` parameter for advanced use cases like cache control
 
 :::
