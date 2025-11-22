@@ -333,6 +333,7 @@ LINK_MAPS: list[LinkMap] = [
             "BaseMessage": "classes/_langchain_core.messages.BaseMessage.html",
             "HumanMessage": "classes/_langchain_core.messages.HumanMessage.html",
             "SystemMessage": "classes/_langchain_core.messages.SystemMessage.html",
+            "SystemMessage.concat": "classes/_langchain_core.messages.SystemMessage.html#concat",
             "ToolMessage": "classes/_langchain_core.messages.ToolMessage.html",
             "ToolCallChunk": "classes/_langchain_core.messages.ToolCallChunk.html",
             "BaseChatModel": "classes/_langchain_core.language_models_chat_models.BaseChatModel.html",
