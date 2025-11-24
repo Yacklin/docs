@@ -3,7 +3,7 @@ title: Including HTTP headers in server logs
 sidebarTitle: Logging Headers
 ---
 
-By default, the Agent Server omits HTTP headers from server logs for privacy reasons. However, logging request and correlation IDs can help you debug issues and trace requests across distributed systems. You can opt-in to logging headers for all API calls by modifying the `logging_headers` section in your [`langgraph.json`](/langsmith/application-structure#configuration-file) file.
+By default, the [Agent Server](/langsmith/agent-server) omits HTTP headers from server logs for privacy reasons. However, logging request and correlation IDs can help you debug issues and trace requests across distributed systems. You can opt-in to logging headers for all API calls by modifying the `logging_headers` section in your [`langgraph.json`](/langsmith/application-structure#configuration-file) file.
 
 ```json
 {
