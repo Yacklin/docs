@@ -1208,6 +1208,60 @@ I'd be happy to help you fix the syntax error in your primes.py file. First, let
   'type': 'tool_call'}]
 ```
 
+### Computer use
+
+Claude supports [computer use](https://platform.claude.com/docs/en/agents-and-tools/tool-use/computer-use-tool) capabilities, allowing it to interact with desktop environments through screenshots, mouse control, and keyboard input.
+
+<Warning>
+    **Important: You must provide the execution environment**
+
+    LangChain handles the API integration (sending/receiving tool calls), but **you are responsible** for:
+    - Setting up a sandboxed computing environment (Linux VM, Docker container, etc.)
+    - Implementing a virtual display (e.g., Xvfb)
+    - Executing Claude's tool calls (screenshot, mouse clicks, keyboard input)
+    - Passing results back to Claude in an agent loop
+
+    Anthropic provides a [reference implementation](https://github.com/anthropics/anthropic-quickstarts/tree/main/computer-use-demo) to help you get started.
+</Warning>
+
+<Info>
+    **Requirements:**
+
+    - Claude Opus 4.5, Claude 4, or Claude Sonnet 3.7
+</Info>
+
+```python
+from langchain_anthropic import ChatAnthropic
+
+model = ChatAnthropic(model="claude-sonnet-4-5-20250929")
+
+# LangChain handles the API call and tool binding
+computer_tool = {
+    "type": "computer_20250124",
+    "name": "computer",
+    "display_width_px": 1024,
+    "display_height_px": 768,
+    "display_number": 1,
+}
+
+model_with_computer = model.bind_tools([computer_tool])
+response = model_with_computer.invoke(
+    "Take a screenshot to see what's on the screen"
+)
+
+# response.tool_calls will contain the computer action Claude wants to perform
+# You must execute this action in your environment and pass the result back
+```
+
+<Note>
+    **Available tool versions:**
+
+    - `computer_20250124` (for Claude 4 and Claude Sonnet 3.7)
+    - `computer_20251124` (for Claude Opus 4.5)
+
+    In each case, the required beta header is automatically added by LangChain when the tool is bound.
+</Note>
+
 ---
 
 ## API reference
