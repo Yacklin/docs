@@ -644,6 +644,55 @@ Total tokens: 408
 ```
 </Accordion>
 
+## Fine-grained tool streaming
+
+Anthropic supports [fine-grained tool streaming](https://platform.claude.com/docs/en/agents-and-tools/tool-use/fine-grained-tool-streaming), a beta feature that reduces latency when streaming tool calls with large parameters.
+
+Rather than buffering entire parameter values before transmission, fine-grained streaming sends parameter data as it becomes available. This can reduce the initial delay from 15 seconds to around 3 seconds for large tool parameters.
+
+<Warning>
+    Fine-grained streaming may return invalid or partial JSON inputs, especially if the response reaches `max_tokens` before completing. Implement appropriate error handling for incomplete JSON data.
+</Warning>
+
+To enable fine-grained tool streaming, specify the `fine-grained-tool-streaming-2025-05-14` beta header when initializing the model:
+
+```python
+from langchain_anthropic import ChatAnthropic
+
+model = ChatAnthropic(
+    model="claude-3-5-sonnet-20241022",
+    betas=["fine-grained-tool-streaming-2025-05-14"],  # [!code highlight]
+)
+
+def write_document(title: str, content: str) -> str:
+    """Write a document with the given title and content."""
+    return f"Document '{title}' written successfully"
+
+model_with_tools = model.bind_tools([write_document])
+
+# Stream tool calls with reduced latency
+for chunk in model_with_tools.stream(
+    "Write a detailed technical document about the benefits of streaming APIs"
+):
+    print(chunk.content)
+```
+
+The streaming chunks will arrive faster, but you should handle potential JSON parsing errors:
+
+```python
+import json
+
+for chunk in model_with_tools.stream("Write a document about AI"):
+    if chunk.tool_calls:
+        for tool_call in chunk.tool_calls:
+            try:
+                # Validate that args are complete
+                json.dumps(tool_call["args"])
+            except (ValueError, TypeError) as e:
+                # Handle incomplete JSON
+                print(f"Received partial tool call: {e}")
+```
+
 ## Citations
 
 Anthropic supports a [citations](https://platform.claude.com/docs/en/build-with-claude/citations) feature that lets Claude attach context to its answers based on source documents supplied by the user.
