@@ -1,5 +1,5 @@
-# Automatically tag issues and pull requests as "external"
-# when created by users who are not members of the langchain-ai
+# Automatically tag issues and pull requests as "external" or "internal"
+# based on whether the author is a member of the langchain-ai
 # GitHub organization.
 #
 # Setup Requirements:
@@ -119,3 +119,39 @@ jobs:
             });
 
             console.log(`Added 'external' label to pull request #${pull_number}`);
+
+      - name: Add internal label to issue
+        if: steps.check-membership.outputs.is-external == 'false' && github.event_name == 'issues'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.issue.number;
+
+            await github.rest.issues.addLabels({
+              owner,
+              repo,
+              issue_number,
+              labels: ['internal']
+            });
+
+            console.log(`Added 'internal' label to issue #${issue_number}`);
+
+      - name: Add internal label to pull request
+        if: steps.check-membership.outputs.is-external == 'false' && github.event_name == 'pull_request_target'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo;
+            const pull_number = context.payload.pull_request.number;
+
+            await github.rest.issues.addLabels({
+              owner,
+              repo,
+              issue_number: pull_number,
+              labels: ['internal']
+            });
+
+            console.log(`Added 'internal' label to pull request #${pull_number}`);
