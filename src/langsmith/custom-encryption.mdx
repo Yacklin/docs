@@ -89,6 +89,10 @@ JSON handlers encrypt structured data like thread metadata, assistant context, a
 **Encrypted fields cannot be searched or filtered.** Design your metadata schema so that fields you need to query remain unencrypted.
 </Warning>
 
+<Warning>
+**Migration required for existing data.** Unlike blob encryption, JSON handlers have no automatic way to detect whether a field value is already encrypted. If you enable JSON encryption on a system with existing unencrypted data, your decrypt handler may fail when it tries to decrypt plaintext values. Either migrate existing data before enabling encryption, or catch decryption errors and return the original value (see examples below).
+</Warning>
+
 Common fields to leave **unencrypted** for search and filtering:
 
 - `user_id`, `tenant_id`, `project_id` — for access control queries
@@ -105,7 +109,7 @@ Encrypt fields containing **sensitive data**:
 
 ```python
 import os
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 from langgraph_sdk import Encryption, EncryptionContext
 
 encryption = Encryption()
@@ -145,7 +149,8 @@ async def decrypt_json(ctx: EncryptionContext, data: dict) -> dict:
         if key in SENSITIVE_FIELDS and isinstance(value, str):
             try:
                 result[key] = fernet.decrypt(value.encode()).decode()
-            except Exception:
+            except InvalidToken:
+                # Not encrypted (pre-migration data), return as-is
                 result[key] = value
         else:
             result[key] = value
@@ -253,14 +258,17 @@ For production deployments on AWS, use the [AWS Encryption SDK](https://docs.aws
 - Handles envelope encryption automatically (no manual key packing)
 - Provides key rotation and audit logging
 - Binds ciphertext to encryption context (tenant isolation)
+- Caches data keys locally to avoid repeated KMS calls, latency and rate limits
 
 ### Complete example
 
 ```python
 import base64
 import os
+from binascii import Error as BinasciiError
 
 import aws_encryption_sdk
+from aws_encryption_sdk.exceptions import NotSupportedError, SerializationError
 from aws_encryption_sdk import (
     CachingCryptoMaterialsManager,
     CommitmentPolicy,
@@ -271,7 +279,7 @@ from langgraph_sdk import Encryption, EncryptionContext
 
 encryption = Encryption()
 
-# The SDK uses envelope encryption: one KMS API call generates a data key,
+# The AWS Encryption SDK uses envelope encryption: one KMS API call generates a data key,
 # then encrypts/decrypts locally. The cache reuses data keys across operations.
 client = aws_encryption_sdk.EncryptionSDKClient(
     commitment_policy=CommitmentPolicy.REQUIRE_ENCRYPT_REQUIRE_DECRYPT
@@ -329,7 +337,8 @@ async def decrypt_json(ctx: EncryptionContext, data: dict) -> dict:
                 ciphertext = base64.b64decode(value)
                 plaintext, _ = client.decrypt(source=ciphertext, key_provider=key_provider)
                 result[key] = plaintext.decode()
-            except Exception:
+            except (BinasciiError, SerializationError, NotSupportedError):
+                # Not encrypted (pre-migration data), return as-is
                 result[key] = value
         else:
             result[key] = value
