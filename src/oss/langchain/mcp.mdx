@@ -24,7 +24,7 @@ uv add langchain-mcp-adapters
 ```
 </CodeGroup>
 
-`langchain-mcp-adapters` enables agents to use tools defined across one or more MCP servers.
+`langchain-mcp-adapters` enables agents to use tools defined across one or more MCP servers:
 
 ```python Accessing multiple MCP servers icon="server"
 from langchain_mcp_adapters.client import MultiServerMCPClient  # [!code highlight]
@@ -82,7 +82,7 @@ bun add @langchain/mcp-adapters
 ```
 </CodeGroup>
 
-`@langchain/mcp-adapters` enables agents to use tools defined across one or more MCP server.
+`@langchain/mcp-adapters` enables agents to use tools defined across one or more MCP server:
 
 ```ts Accessing multiple MCP servers icon="server"
 import { MultiServerMCPClient } from "@langchain/mcp-adapters";  // [!code highlight]
@@ -129,7 +129,7 @@ const weatherResponse = await agent.invoke({
 
 :::python
 
-To create a custom MCP server, you can use the [FastMCP](https://gofastmcp.com/getting-started/welcome) library.
+To create a custom MCP server, use the [FastMCP](https://gofastmcp.com/getting-started/welcome) library:
 
 
 <CodeGroup>
@@ -165,7 +165,7 @@ bun add @modelcontextprotocol/sdk
 </CodeGroup>
 :::
 
-Use the following reference implementations to test your agent with MCP tool servers.
+To test your agent with MCP tool servers, use the following examples:
 
 
 :::python
@@ -499,7 +499,9 @@ const client = new MultiServerMCPClient({
 
 ## Stateful sessions
 
-By default, `MultiServerMCPClient` is **stateless**—each tool invocation creates a fresh MCP session, executes the tool, and then cleans up. If you need to control the lifecycle of an MCP session (for example, when working with a stateful server that maintains context across tool calls), you can create a persistent `ClientSession` using `client.session()`.
+By default, `MultiServerMCPClient` is **stateless**—each tool invocation creates a fresh MCP session, executes the tool, and then cleans up.
+
+If you need to control the lifecycle of an MCP session (for example, when working with a stateful server that maintains context across tool calls), you can create a persistent `ClientSession` using `client.session()`.
 
 This gives you explicit control over the [session lifecycle](https://modelcontextprotocol.io/specification/2025-03-26/basic/lifecycle)—initializing, using, and then closing the session.
 
@@ -525,7 +527,7 @@ async with client.session("server_name") as session:  # [!code highlight]
 
 ### Tools
 
-[Tools](https://modelcontextprotocol.io/docs/concepts/tools) allow MCP servers to expose executable functions that LLMs can invoke to perform actions—such as querying databases, calling APIs, or interacting with external systems. LangChain converts MCP tools into LangChain [tools](/docs/concepts/tools), making them directly usable in any LangChain agent or workflow.
+[Tools](https://modelcontextprotocol.io/docs/concepts/tools) allow MCP servers to expose executable functions that LLMs can invoke to perform actions—such as querying databases, calling APIs, or interacting with external systems. LangChain converts MCP tools into LangChain [tools](/oss/langchain/tools), making them directly usable in any LangChain agent or workflow.
 
 #### Loading tools
 
