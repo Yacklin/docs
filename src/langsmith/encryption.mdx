@@ -67,6 +67,10 @@ Add your encryption module to `langgraph.json`:
 }
 ```
 
+<Note>
+If you're already using `LANGGRAPH_AES_KEY`, keep it configured—custom encryption replaces AES for new writes, but existing AES-encrypted data will still be readable.
+</Note>
+
 ### Defining your encryption module
 
 #### Blob encryption (checkpoints)
