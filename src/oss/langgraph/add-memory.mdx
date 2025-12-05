@@ -2141,3 +2141,12 @@ await checkpointer.deleteThread(threadId);
 
 **LangMem** is a LangChain-maintained library that offers tools for managing long-term memories in your agent. See the [LangMem documentation](https://langchain-ai.github.io/langmem/) for usage examples.
 :::
+
+## Database management
+
+If you are using Postgres or Redis to store short and/or long-term memory, you will need to call the LangGraph-provided `saver` or `store`'s `setup` method before you can use it with your database.
+That function sets up the schema necessary for the checkpoint to store data. It will also run any migrations on an existing database if you have upgraded your LangGraph version and the schema has changed.
+
+We recommend calling this method in a way consistent with your organization's best practices for managing database schemas e.g. calling it when your application first starts
+or including a call to it in any existing process you have that automatically runs database migrations.
+
