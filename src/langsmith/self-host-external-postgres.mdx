@@ -102,6 +102,7 @@ postgres:
   external:
     enabled: true
     connectionUrl: "myuser:mypassword@myhost:5432/mydatabase?sslmode=verify-full&sslrootcert=system"
+    customTls: true
 ```
 
 ```yaml Kubernetes Secret (CA bundle)
@@ -136,6 +137,7 @@ postgres:
   external:
     enabled: true
     connectionUrl: "myuser:mypassword@myhost:5432/mydatabase?sslmode=verify-full&sslrootcert=system"
+    customTls: true
     clientCert:
       secretName: "postgres-mtls-secret"
       certSecretKey: "tls.crt"
