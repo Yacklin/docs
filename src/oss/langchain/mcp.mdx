@@ -24,7 +24,11 @@ uv add langchain-mcp-adapters
 ```
 </CodeGroup>
 
-`langchain-mcp-adapters` enables agents to use tools defined across one or more MCP servers:
+`langchain-mcp-adapters` enables agents to use tools defined across one or more MCP servers.
+
+<Note>
+    `MultiServerMCPClient` is **stateless by default**. Each tool invocation creates a fresh MCP `ClientSession`, executes the tool, and then cleans up. See the [stateful sessions](#stateful-sessions) section for more details.
+</Note>
 
 ```python Accessing multiple MCP servers icon="server"
 from langchain_mcp_adapters.client import MultiServerMCPClient  # [!code highlight]
@@ -82,7 +86,11 @@ bun add @langchain/mcp-adapters
 ```
 </CodeGroup>
 
-`@langchain/mcp-adapters` enables agents to use tools defined across one or more MCP server:
+`@langchain/mcp-adapters` enables agents to use tools defined across one or more MCP servers.
+
+<Note>
+    `MultiServerMCPClient` is **stateless by default**. Each tool invocation creates a fresh MCP `ClientSession`, executes the tool, and then cleans up. See the [stateful sessions](#stateful-sessions) section for more details.
+</Note>
 
 ```ts Accessing multiple MCP servers icon="server"
 import { MultiServerMCPClient } from "@langchain/mcp-adapters";  // [!code highlight]
@@ -118,12 +126,6 @@ const weatherResponse = await agent.invoke({
 });
 ```
 :::
-
-<Note>
-    `MultiServerMCPClient` is **stateless by default**. Each tool invocation creates a fresh MCP `ClientSession`, executes the tool, and then cleans up.
-
-    See the [stateful sessions](#stateful-sessions) section for more details.
-</Note>
 
 ## Custom servers
 
@@ -388,7 +390,7 @@ MCP supports different transport mechanisms for client-server communication.
 
 ### HTTP
 
-The `http` transport (also referred to as `streamable-http`) uses HTTP requests for client-server communication.
+The `http` transport (also referred to as `streamable-http`) uses HTTP requests for client-server communication. See the [MCP HTTP transport specification](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http) for more details.
 
 :::python
 ```python
@@ -417,7 +419,7 @@ const client = new MultiServerMCPClient({
 #### Passing headers
 
 :::python
-When connecting to MCP servers over HTTP, you can include custom headers (e.g., for authentication or tracing) using the `headers` field in the connection configuration. This is supported for `sse` and `streamable_http` transports.
+When connecting to MCP servers over HTTP, you can include custom headers (e.g., for authentication or tracing) using the `headers` field in the connection configuration. This is supported for `sse` (deprecated by MCP spec) and `streamable_http` transports.
 
 ```python Passing headers with MultiServerMCPClient
 from langchain_mcp_adapters.client import MultiServerMCPClient
@@ -468,6 +470,10 @@ client = MultiServerMCPClient(
 ### stdio
 
 Client launches server as a subprocess and communicates via standard input/output. Best for local tools and simple setups.
+
+<Note>
+    Unlike HTTP transports, `stdio` connections are inherently **stateful**—the subprocess persists for the lifetime of the client connection. However, when using `MultiServerMCPClient` without explicit session management, each tool call still creates a new session. See [stateful sessions](#stateful-sessions) for managing persistent connections.
+</Note>
 
 :::python
 ```python
@@ -561,7 +567,7 @@ MCP tools can return [structured content](https://modelcontextprotocol.io/specif
 
 When an MCP tool returns `structuredContent`, the adapter wraps it in an [`MCPToolArtifact`](/docs/reference/langchain-mcp-adapters#MCPToolArtifact) and returns it as the tool's artifact. You can access this using the `artifact` field on the `ToolMessage`.
 
-##### Extracting structured content from artifact
+**Extracting structured content from artifact**
 
 After invoking your agent, you can access the structured content from tool messages in the response:
 
@@ -581,12 +587,12 @@ result = await agent.ainvoke(
 # Extract structured content from tool messages
 for message in result["messages"]:
     if isinstance(message, ToolMessage) and message.artifact:
-        structured_content = message.artifact.structured_content
+        structured_content = message.artifact["structured_content"]
 ```
 
 #### Multimodal tool content
 
-MCP tools can return multimodal content (images, text, etc.) in their responses. When an MCP server returns content with multiple parts (e.g., text and images), the adapter converts them to LangChain's [standard content blocks](/oss/langchain/messages#standard-content-blocks). You can access the standardized representation via the `content_blocks` property on the `ToolMessage`:
+MCP tools can return [multimodal content](https://modelcontextprotocol.io/specification/2025-03-26/server/tools#tool-result) (images, text, etc.) in their responses. When an MCP server returns content with multiple parts (e.g., text and images), the adapter converts them to LangChain's [standard content blocks](/oss/langchain/messages#standard-content-blocks). You can access the standardized representation via the `content_blocks` property on the `ToolMessage`:
 
 ```python
 from langchain_mcp_adapters.client import MultiServerMCPClient
@@ -896,56 +902,46 @@ For more context engineering patterns, see [Context engineering](/oss/langchain/
 
 #### State updates and commands
 
-Interceptors can return `Command` objects to update agent state or control graph execution flow:
+Interceptors can return `Command` objects to update agent state or control graph execution flow. This is useful for tracking task progress, switching between agents, or ending execution early.
 
-```python Returning Command from interceptor
+```python Mark task complete and switch agents
 from langchain.agents import AgentState, create_agent
 from langchain_mcp_adapters.interceptors import MCPToolCallRequest
 from langchain.messages import ToolMessage
 from langgraph.types import Command
 
-async def track_tool_usage(
+async def handle_task_completion(
     request: MCPToolCallRequest,
     handler,
 ):
-    """Track tool usage in agent state."""
+    """Mark task complete and hand off to summary agent."""
     result = await handler(request)
 
-    # Update state with tool usage counter
-    return Command(  # [!code highlight]
-        update={
-            "tool_call_count": request.runtime.state.get("tool_call_count", 0) + 1,  # [!code highlight]
-            "messages": [result] if isinstance(result, ToolMessage) else [],
-        }
-    )
+    if request.name == "submit_order":
+        return Command(
+            update={
+                "messages": [result] if isinstance(result, ToolMessage) else [],
+                "task_status": "completed",  # [!code highlight]
+            },
+            goto="summary_agent",  # [!code highlight]
+        )
 
-# Use with custom agent state
-class CustomAgentState(AgentState):
-    tool_call_count: int = 0
-
-agent = create_agent(
-    model,
-    tools,
-    state_schema=CustomAgentState,
-)
+    return result
 ```
 
-Use `Command` with `goto` to control graph flow—for example, to end the agent run early:
+Use `Command` with `goto="__end__"` to end execution early:
 
-```python End agent run based on tool result
+```python End agent run on completion
 async def end_on_success(
     request: MCPToolCallRequest,
     handler,
 ):
-    """End agent run if tool indicates task is complete."""
+    """End agent run when task is marked complete."""
     result = await handler(request)
 
-    if request.name == "submit_order" and "success" in str(result):
+    if request.name == "mark_complete":
         return Command(
-            update={
-                "messages": [result],
-                "order_submitted": True,
-            },
+            update={"messages": [result], "status": "done"},
             goto="__end__",  # [!code highlight]
         )
 
@@ -956,7 +952,7 @@ async def end_on_success(
 
 Interceptors are async functions that wrap tool execution, enabling request/response modification, retry logic, and other cross-cutting concerns. They follow an "onion" pattern where the first interceptor in the list is the outermost layer.
 
-##### Basic pattern
+**Basic pattern**
 
 An interceptor is an async function that receives a request and a handler. You can modify the request before calling the handler, modify the response after, or skip the handler entirely.
 
@@ -980,7 +976,7 @@ client = MultiServerMCPClient(
 )
 ```
 
-##### Modifying requests
+**Modifying requests**
 
 Use `request.override()` to create a modified request. This follows an immutable pattern, leaving the original request unchanged.
 
@@ -997,7 +993,7 @@ async def double_args_interceptor(
 # Original call: add(a=2, b=3) becomes add(a=4, b=6)
 ```
 
-##### Modifying headers at runtime
+**Modifying headers at runtime**
 
 Interceptors can modify HTTP headers dynamically based on the request context:
 
@@ -1014,7 +1010,7 @@ async def auth_header_interceptor(
     return await handler(modified_request)
 ```
 
-##### Composing interceptors
+**Composing interceptors**
 
 Multiple interceptors compose in "onion" order — the first interceptor in the list is the outermost layer:
 
@@ -1040,7 +1036,7 @@ client = MultiServerMCPClient(
 # outer: before -> inner: before -> tool execution -> inner: after -> outer: after
 ```
 
-##### Error handling
+**Error handling**
 
 Use interceptors to catch tool execution errors and implement retry logic:
 
