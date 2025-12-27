@@ -134,7 +134,7 @@ const agent = createAgent({
     See the API reference for @[`ContextSize`] for more information.
 </ParamField>
 
-<ParamField body="keep" type="ContextSize" default=("messages", 20)>
+<ParamField body="keep" type="ContextSize" default="('messages', 20)">
     How much context to preserve after summarization. Specify exactly one of:
 
     - `fraction` (float): Fraction of model's context size to keep (0-1)
@@ -152,7 +152,7 @@ const agent = createAgent({
     Custom prompt template for summarization. Uses built-in template if not specified. The template should include `{messages}` placeholder where conversation history will be inserted.
 </ParamField>
 
-<ParamField body="trim_tokens_to_summarize" type="number" default=4000>
+<ParamField body="trim_tokens_to_summarize" type="number" default="4000">
     Maximum number of tokens to include when generating the summary. Messages will be trimmed to fit this limit before summarization.
 </ParamField>
 
